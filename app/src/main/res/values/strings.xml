@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">WeChatSDK_sample_Android</string>
+
+    <string name="connection_error">Connection error.</string>
 </resources>
