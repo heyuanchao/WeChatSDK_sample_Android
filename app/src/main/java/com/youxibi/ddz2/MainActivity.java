@@ -11,6 +11,7 @@ public class MainActivity extends Activity {
 
     // APP_ID 替换为你的应用从官方网站申请到的合法appId
     public static final String APP_ID = "wx724c4dda97632881";
+    public static final String APP_SECRECT = "c566e685587ca7ba01f579e909f817c1";
 
     private IWXAPI api;
 
