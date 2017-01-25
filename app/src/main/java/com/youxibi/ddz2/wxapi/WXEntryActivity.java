@@ -5,27 +5,22 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
-import com.tencent.mm.sdk.modelbase.BaseReq;
-import com.tencent.mm.sdk.modelbase.BaseResp;
-import com.tencent.mm.sdk.modelmsg.SendAuth;
-import com.tencent.mm.sdk.openapi.IWXAPI;
-import com.tencent.mm.sdk.openapi.IWXAPIEventHandler;
-import com.tencent.mm.sdk.openapi.WXAPIFactory;
+import com.tencent.mm.opensdk.modelbase.BaseReq;
+import com.tencent.mm.opensdk.modelbase.BaseResp;
+import com.tencent.mm.opensdk.modelmsg.SendAuth;
+import com.tencent.mm.opensdk.openapi.IWXAPI;
+import com.tencent.mm.opensdk.openapi.IWXAPIEventHandler;
+import com.tencent.mm.opensdk.openapi.WXAPIFactory;
 import com.youxibi.ddz2.MainActivity;
 import com.youxibi.ddz2.R;
+import com.youxibi.ddz2.Util;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
     private static final String TAG = "WXEntryActivity";
@@ -94,7 +89,7 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
         @Override
         protected String doInBackground(String... urls) {
             try {
-                return loadFromNetwork(urls[0]);
+                return Util.httpGet(urls[0]);
             } catch (IOException e) {
                 return getString(R.string.connection_error);
             }
@@ -112,7 +107,6 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
                 token.setOpenid(jsonObject.optString("openid"));
                 token.setScope(jsonObject.optString("scope"));
                 token.setUnionid(jsonObject.optString("unionid"));
-
                 Log.i(TAG, token.toString());
 
                 getUserInfo(token);
@@ -127,7 +121,7 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
         @Override
         protected String doInBackground(String... urls) {
             try {
-                return loadFromNetwork(urls[0]);
+                return Util.httpGet(urls[0]);
             } catch (IOException e) {
                 return getString(R.string.connection_error);
             }
@@ -148,63 +142,12 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
                 userinfo.setCountry(jsonObject.optString("country"));
                 userinfo.setHeadimgurl(jsonObject.optString("headimgurl"));
                 userinfo.setUnionid(jsonObject.optString("unionid"));
-
                 Log.i(TAG, userinfo.toString());
+
+                Toast.makeText(WXEntryActivity.this, "你好，" + userinfo.getNickname(), Toast.LENGTH_SHORT).show();
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
-    }
-
-    private String loadFromNetwork(String urlString) throws IOException {
-        InputStream stream = null;
-        String str ="";
-
-        try {
-            stream = downloadUrl(urlString);
-            // str = readIt(stream, 500);
-            str = read(stream);
-        } finally {
-            if (stream != null) {
-                stream.close();
-            }
-        }
-        return str;
-    }
-
-    private InputStream downloadUrl(String urlString) throws IOException {
-        URL url = new URL(urlString);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setReadTimeout(10000 /* milliseconds */);
-        conn.setConnectTimeout(15000 /* milliseconds */);
-        conn.setRequestMethod("GET");
-        conn.setDoInput(true);
-        // Start the query
-        // conn.connect();
-        if (conn.getResponseCode() == HttpURLConnection.HTTP_MOVED_PERM || conn.getResponseCode() == HttpURLConnection.HTTP_MOVED_TEMP) {
-            return downloadUrl(conn.getHeaderField("Location"));
-        }
-        InputStream stream = conn.getInputStream();
-        return stream;
-    }
-
-    private String readIt(InputStream stream, int len) throws IOException, UnsupportedEncodingException {
-        Reader reader = null;
-        reader = new InputStreamReader(stream, "UTF-8");
-        char[] buffer = new char[len];
-        reader.read(buffer);
-        return new String(buffer);
-    }
-
-    //从流中读取数据
-    private String read(InputStream inStream) throws IOException{
-        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-        byte[] buffer = new byte[1024];
-        int len = 0;
-        while((len = inStream.read(buffer)) != -1) {
-            outStream.write(buffer, 0, len);
-        }
-        inStream.close();
-        return new String(outStream.toByteArray());
     }
 }

@@ -2,4 +2,6 @@
     <string name="app_name">WeChatSDK_sample_Android</string>
 
     <string name="connection_error">Connection error.</string>
+    <string name="wx_login">微信登录</string>
+    <string name="wx_pay">微信支付</string>
 </resources>
