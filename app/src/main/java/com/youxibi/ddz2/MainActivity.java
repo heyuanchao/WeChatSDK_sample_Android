@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.tencent.mm.opensdk.modelmsg.SendAuth;
+import com.tencent.mm.opensdk.modelpay.PayReq;
 import com.tencent.mm.opensdk.openapi.IWXAPI;
 import com.tencent.mm.opensdk.openapi.WXAPIFactory;
 
@@ -30,6 +31,7 @@ public class MainActivity extends Activity {
     private IWXAPI api;
 
     private String params;
+    private String key;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,7 +93,7 @@ public class MainActivity extends Activity {
 
                 String appid = jsonObject.optString("appid");
                 String body = jsonObject.optString("body");
-                String key = jsonObject.optString("key");
+                key = jsonObject.optString("key");
                 String mch_id = jsonObject.optString("mch_id");
                 String nonce_str = Util.getRandomString(1, 32);
 //                String nonce_str = "5K8264ILTKCH16CQ2502SI8ZNMTM67VS";
@@ -172,9 +174,29 @@ public class MainActivity extends Activity {
                 Log.i(TAG, entry.getKey() + ": " + entry.getValue());
             }
 
-            if (map.get("prepay_id") != null) {
+            String appid = map.get("appid");
+            String partnerid = map.get("mch_id");
+            String prepayid = map.get("prepay_id");
+            String noncestr = Util.getRandomString(1, 32);
+            String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
 
-            }
+            PayReq req = new PayReq();
+            req.appId = appid;
+            req.nonceStr = noncestr;
+            req.packageValue = "Sign=WXPay";
+            req.partnerId = partnerid;
+            req.prepayId = prepayid;
+            req.timeStamp = timestamp;
+
+            String stringSignTemp = "appid=" + appid
+                    + "&noncestr=" + noncestr
+                    + "&package=" + "Sign=WXPay"
+                    + "&partnerid=" + partnerid
+                    + "&prepayid=" + prepayid
+                    + "&timestamp=" + timestamp
+                    + "&key=" + key;
+            req.sign = Util.MD5(stringSignTemp).toUpperCase();
+            api.sendReq(req);
         }
     }
 }

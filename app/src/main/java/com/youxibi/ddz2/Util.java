@@ -148,8 +148,8 @@ public class Util {
     public static String getRandomString(int type, int length) { //length表示生成字符串的长度
         String base = "0123456789";
         if (type == 1) {
-//            base = "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789";
-            base = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            base = "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789";
+//            base = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         }
 
         Random random = new Random();
@@ -203,7 +203,7 @@ public class Util {
                 String nodeName = parser.getName();
                 switch (eventType) {
                     case XmlPullParser.START_TAG:// 开始元素事件
-                        if ("appid".equals(nodeName) || "nonce_str".equals(nodeName) || "mch_id".equals(nodeName) || "prepay_id".equals(nodeName) || "sign".equals(nodeName)) {
+                        if ("appid".equals(nodeName) || "mch_id".equals(nodeName) || "prepay_id".equals(nodeName)) {
                             map.put(nodeName, parser.nextText());
                         }
 
