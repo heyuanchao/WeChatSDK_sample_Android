@@ -4,7 +4,9 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Xml;
 import android.view.View;
+import android.widget.Toast;
 
 import com.tencent.mm.opensdk.modelmsg.SendAuth;
 import com.tencent.mm.opensdk.modelpay.PayReq;
@@ -13,7 +15,10 @@ import com.tencent.mm.opensdk.openapi.WXAPIFactory;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -42,6 +47,7 @@ public class MainActivity extends Activity {
         api = WXAPIFactory.createWXAPI(this, APP_ID, false);
 
         if (!api.isWXAppInstalled()) {
+            Toast.makeText(this, "请先安装微信", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -62,13 +68,6 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 new GetParameterTask().execute("http://www.mojing.com/2.php");
-
-//                try {
-//                    Util.httpPost("https://api.mch.weixin.qq.com/pay/unifiedorder", params);
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-
             }
         });
     }
@@ -80,14 +79,17 @@ public class MainActivity extends Activity {
             try {
                 return Util.httpGet(urls[0]);
             } catch (IOException e) {
-                return getString(R.string.connection_error);
+                return null;
             }
         }
 
         @Override
         protected void onPostExecute(String result) {
-            Log.i(TAG, "result: " + result);
-
+            if (result == null) {
+                Toast.makeText(MainActivity.this, R.string.connection_error, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Log.i(TAG, result);
             try {
                 JSONObject jsonObject = new JSONObject(result);
 
@@ -99,26 +101,13 @@ public class MainActivity extends Activity {
 //                String nonce_str = "5K8264ILTKCH16CQ2502SI8ZNMTM67VS";
                 String notify_url = jsonObject.optString("notify_url");
 
-                /*
-                Map<String, String> p = new HashMap<>();
-                p.put("appid", jsonObject.optString("appid"));
-                p.put("body", jsonObject.optString("body"));
-                p.put("key", jsonObject.optString("key"));
-                p.put("mch_id", jsonObject.optString("mch_id"));
-                p.put("nonce_str", Util.getRandomString(32));
-                */
-
                 SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd", Locale.CHINA);
 //                SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINA);
                 String out_trade_no = formatter.format(new Date()) + Util.getRandomString(0, 6);
-//                String out_trade_no = formatter.format(new Date());
 //                String out_trade_no = "20150806125346";
-//                p.put("out_trade_no", out_trade_no);
 
-                // p.put("spbill_create_ip", jsonObject.optString("spbill_create_ip"));
                 String spbill_create_ip = jsonObject.optString("spbill_create_ip");
                 int total_fee = 1;
-                // p.put("total_fee", "1");
 
                 String stringSignTemp = "appid=" + appid
                         + "&body=" + body
@@ -131,7 +120,6 @@ public class MainActivity extends Activity {
                         + "&trade_type=APP"
                         + "&key=" + key;
                 String sign = Util.MD5(stringSignTemp).toUpperCase();
-                // p.put("sign", sign);
 
                 params = "<xml>" + "<appid>" + appid + "</appid>"
                         + "<body><![CDATA[" + body + "]]></body>"
@@ -146,7 +134,6 @@ public class MainActivity extends Activity {
                         + "</xml>";
 
                 Log.i(TAG, params);
-
                 new GetPrepayIdTask().execute("https://api.mch.weixin.qq.com/pay/unifiedorder");
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -161,18 +148,21 @@ public class MainActivity extends Activity {
             try {
                 return Util.httpPost(urls[0], params);
             } catch (IOException e) {
-                return getString(R.string.connection_error);
+                return null;
             }
         }
 
         @Override
         protected void onPostExecute(String result) {
-            Log.i(TAG, "result: " + result);
-
-            Map<String, String> map = Util.parseXML(result);
-            for (Map.Entry<String, String> entry : map.entrySet()) {
-                Log.i(TAG, entry.getKey() + ": " + entry.getValue());
+            if (result == null) {
+                Toast.makeText(MainActivity.this, R.string.connection_error, Toast.LENGTH_SHORT).show();
+                return;
             }
+            Log.i(TAG, result);
+            Map<String, String> map = parseXML(result);
+//            for (Map.Entry<String, String> entry : map.entrySet()) {
+//                Log.i(TAG, entry.getKey() + ": " + entry.getValue());
+//            }
 
             String appid = map.get("appid");
             String partnerid = map.get("mch_id");
@@ -198,5 +188,37 @@ public class MainActivity extends Activity {
             req.sign = Util.MD5(stringSignTemp).toUpperCase();
             api.sendReq(req);
         }
+    }
+
+    private Map<String, String> parseXML(String xml) {
+        Map<String, String> map = new HashMap<>();
+
+        ByteArrayInputStream stream = new ByteArrayInputStream(xml.getBytes());
+        XmlPullParser parser = Xml.newPullParser();
+        try {
+            parser.setInput(stream, "UTF-8");
+            int eventType = parser.getEventType();
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                String nodeName = parser.getName();
+                switch (eventType) {
+                    case XmlPullParser.START_TAG:// 开始元素事件
+                        if ("appid".equals(nodeName) || "mch_id".equals(nodeName) || "prepay_id".equals(nodeName)) {
+                            map.put(nodeName, parser.nextText());
+                        }
+
+                        break;
+                    case XmlPullParser.END_TAG:// 结束元素事件
+                        break;
+                }
+                eventType = parser.next();
+            }
+            stream.close();
+        } catch (XmlPullParserException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return map;
     }
 }

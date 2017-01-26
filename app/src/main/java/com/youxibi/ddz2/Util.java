@@ -183,44 +183,6 @@ public class Util {
             e.printStackTrace();
         }
 
-        return "";
+        return null;
     }
-
-    /**
-     * @description 将xml字符串转换成map
-     * @param xml
-     * @return Map
-     */
-    public static Map<String, String> parseXML(String xml) {
-        Map<String, String> map = new HashMap<>();
-
-        ByteArrayInputStream stream = new ByteArrayInputStream(xml.getBytes());
-        XmlPullParser parser = Xml.newPullParser();
-        try {
-            parser.setInput(stream, "UTF-8");
-            int eventType = parser.getEventType();
-            while (eventType != XmlPullParser.END_DOCUMENT) {
-                String nodeName = parser.getName();
-                switch (eventType) {
-                    case XmlPullParser.START_TAG:// 开始元素事件
-                        if ("appid".equals(nodeName) || "mch_id".equals(nodeName) || "prepay_id".equals(nodeName)) {
-                            map.put(nodeName, parser.nextText());
-                        }
-
-                        break;
-                    case XmlPullParser.END_TAG:// 结束元素事件
-                        break;
-                }
-                eventType = parser.next();
-            }
-            stream.close();
-        } catch (XmlPullParserException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return map;
-    }
-
 }
