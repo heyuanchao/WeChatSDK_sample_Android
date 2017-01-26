@@ -164,6 +164,21 @@ public class MainActivity extends Activity {
 //                Log.i(TAG, entry.getKey() + ": " + entry.getValue());
 //            }
 
+            String return_code = map.get("return_code");
+            String return_msg = map.get("return_msg");
+            if ("FAIL".equals(return_code)) {
+                Toast.makeText(MainActivity.this, return_msg, Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String result_code = map.get("result_code");
+            String err_code = map.get("err_code");
+            String err_code_des = map.get("err_code_des");
+            if ("FAIL".equals(result_code)) {
+                Toast.makeText(MainActivity.this, err_code + ": " + err_code_des, Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             String appid = map.get("appid");
             String partnerid = map.get("mch_id");
             String prepayid = map.get("prepay_id");
@@ -202,7 +217,10 @@ public class MainActivity extends Activity {
                 String nodeName = parser.getName();
                 switch (eventType) {
                     case XmlPullParser.START_TAG:// 开始元素事件
-                        if ("appid".equals(nodeName) || "mch_id".equals(nodeName) || "prepay_id".equals(nodeName)) {
+                        if ("return_code".equals(nodeName) || "result_code".equals(nodeName)
+                                || "err_code".equals(nodeName) || "err_code_des".equals(nodeName)
+                                || "return_msg".equals(nodeName) || "appid".equals(nodeName)
+                                || "mch_id".equals(nodeName) || "prepay_id".equals(nodeName)) {
                             map.put(nodeName, parser.nextText());
                         }
 

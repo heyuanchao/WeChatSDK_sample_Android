@@ -1,14 +1,5 @@
 package com.youxibi.ddz2;
 
-import android.content.res.XmlResourceParser;
-import android.util.Xml;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,11 +10,8 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-
-import static android.R.id.list;
 
 public class Util {
 
@@ -42,23 +30,6 @@ public class Util {
         return str;
     }
 
-    /*
-    public static String httpPost(String urlString, Map<String, String> params) throws IOException {
-        InputStream stream = null;
-        String str ="";
-
-        try {
-            stream = downloadUrl(urlString, "POST", params);
-            str = read(stream);
-        } finally {
-            if (stream != null) {
-                stream.close();
-            }
-        }
-        return str;
-    }
-    */
-
     public static String httpPost(String urlString, String params) throws IOException {
         InputStream stream = null;
         String str ="";
@@ -74,27 +45,6 @@ public class Util {
         return str;
     }
 
-    /*
-    private static InputStream downloadUrl(String urlString, String method, Map<String, String> params) throws IOException {
-        URL url = new URL(urlString);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setReadTimeout(10000);
-        conn.setConnectTimeout(15000);
-        conn.setRequestMethod(method);
-
-        if (params != null) {
-            OutputStream outputStream = conn.getOutputStream();
-            outputStream.write(getRequestData(params, "UTF-8").getBytes());
-        }
-
-        if (conn.getResponseCode() == HttpURLConnection.HTTP_MOVED_PERM || conn.getResponseCode() == HttpURLConnection.HTTP_MOVED_TEMP) {
-            return downloadUrl(conn.getHeaderField("Location"), "POST", params);
-        }
-        InputStream stream = conn.getInputStream();
-        return stream;
-    }
-    */
-
     private static InputStream downloadUrl(String urlString, String method, String params) throws IOException {
         URL url = new URL(urlString);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -108,7 +58,7 @@ public class Util {
         }
 
         if (conn.getResponseCode() == HttpURLConnection.HTTP_MOVED_PERM || conn.getResponseCode() == HttpURLConnection.HTTP_MOVED_TEMP) {
-            return downloadUrl(conn.getHeaderField("Location"), "POST", params);
+            return downloadUrl(conn.getHeaderField("Location"), method, params);
         }
         InputStream stream = conn.getInputStream();
         return stream;
