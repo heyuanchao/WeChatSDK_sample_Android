@@ -47,20 +47,20 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
     // 微信发送请求到第三方应用时，会回调到该方法
     @Override
     public void onReq(BaseReq baseReq) {
-        Log.i("@@@", baseReq.toString());
+        Log.i(TAG, baseReq.toString());
     }
 
     // 第三方应用发送到微信的请求处理后的响应结果，会回调到该方法
     @Override
     public void onResp(BaseResp resp) {
-        int result = 0;
-
         switch (resp.errCode) {
             case BaseResp.ErrCode.ERR_OK:
                 if (resp instanceof SendAuth.Resp) {
                     String code = ((SendAuth.Resp) resp).code;
                     String state = ((SendAuth.Resp) resp).state;
-                    getAccessToken(code, state);
+
+                    String url = "https://api.weixin.qq.com/sns/oauth2/access_token?appid=" + MainActivity.APP_ID + "&secret=" + MainActivity.APP_SECRECT + "&code=" + code + "&grant_type=authorization_code";
+                    new GetAccessTokenTask().execute(url);
                 }
                 break;
             case BaseResp.ErrCode.ERR_USER_CANCEL:
@@ -74,16 +74,6 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
         finish();
     }
 
-    private void getAccessToken(String code, String state) {
-        String url = "https://api.weixin.qq.com/sns/oauth2/access_token?appid=" + MainActivity.APP_ID + "&secret=" + MainActivity.APP_SECRECT + "&code=" + code + "&grant_type=authorization_code";
-        new GetAccessTokenTask().execute(url);
-    }
-
-    private void getUserInfo(AccessToken token) {
-        String url = "https://api.weixin.qq.com/sns/userinfo?access_token=" + token.getAccess_token() + "&openid=" + token.getOpenid();
-        new GetUserInfoTask().execute(url);
-    }
-
     private class GetAccessTokenTask extends AsyncTask<String, Void, String> {
 
         @Override
@@ -91,25 +81,29 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
             try {
                 return Util.httpGet(urls[0]);
             } catch (IOException e) {
-                return getString(R.string.connection_error);
+                return null;
             }
         }
 
         @Override
         protected void onPostExecute(String result) {
+            if (result == null) {
+                Toast.makeText(WXEntryActivity.this, R.string.connection_error, Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             try {
                 JSONObject jsonObject = new JSONObject(result);
 
-                AccessToken token = new AccessToken();
-                token.setAccess_token(jsonObject.optString("access_token"));
-                token.setExpires_in(jsonObject.optInt("expires_in"));
-                token.setRefresh_token(jsonObject.optString("refresh_token"));
-                token.setOpenid(jsonObject.optString("openid"));
-                token.setScope(jsonObject.optString("scope"));
-                token.setUnionid(jsonObject.optString("unionid"));
-                Log.i(TAG, token.toString());
+                String access_token = jsonObject.optString("access_token");
+                int expires_in = jsonObject.optInt("expires_in");
+                String refresh_token = jsonObject.optString("refresh_token");
+                String openid = jsonObject.optString("openid");
+                String scope = jsonObject.optString("scope");
+                String unionid = jsonObject.optString("unionid");
 
-                getUserInfo(token);
+                String url = "https://api.weixin.qq.com/sns/userinfo?access_token=" + access_token + "&openid=" + openid;
+                new GetUserInfoTask().execute(url);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -123,28 +117,31 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
             try {
                 return Util.httpGet(urls[0]);
             } catch (IOException e) {
-                return getString(R.string.connection_error);
+                return null;
             }
         }
 
         @Override
         protected void onPostExecute(String result) {
+            if (result == null) {
+                Toast.makeText(WXEntryActivity.this, R.string.connection_error, Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             try {
                 JSONObject jsonObject = new JSONObject(result);
 
-                WxUserInfo userinfo = new WxUserInfo();
-                userinfo.setOpenid(jsonObject.optString("openid"));
-                userinfo.setNickname(jsonObject.optString("nickname"));
-                userinfo.setSex(jsonObject.optInt("sex"));
-                userinfo.setLanguage(jsonObject.optString("language"));
-                userinfo.setCity(jsonObject.optString("city"));
-                userinfo.setProvince(jsonObject.optString("province"));
-                userinfo.setCountry(jsonObject.optString("country"));
-                userinfo.setHeadimgurl(jsonObject.optString("headimgurl"));
-                userinfo.setUnionid(jsonObject.optString("unionid"));
-                Log.i(TAG, userinfo.toString());
+                String openid = jsonObject.optString("openid");
+                String nickname = jsonObject.optString("nickname");
+                int sex = jsonObject.optInt("sex");
+                String language = jsonObject.optString("language");
+                String city = jsonObject.optString("city");
+                String province = jsonObject.optString("province");
+                String country = jsonObject.optString("country");
+                String headimgurl = jsonObject.optString("headimgurl");
+                String unionid = jsonObject.optString("unionid");
 
-                Toast.makeText(WXEntryActivity.this, "你好，" + userinfo.getNickname(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(WXEntryActivity.this, "你好，" + nickname, Toast.LENGTH_SHORT).show();
             } catch (JSONException e) {
                 e.printStackTrace();
             }
