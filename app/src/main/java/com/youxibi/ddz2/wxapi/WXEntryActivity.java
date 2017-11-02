@@ -58,6 +58,7 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
                 if (resp instanceof SendAuth.Resp) {
                     String code = ((SendAuth.Resp) resp).code;
                     String state = ((SendAuth.Resp) resp).state;
+                    Log.i(TAG, "code: " + code + ", state: " + state);
 
                     String url = "https://api.weixin.qq.com/sns/oauth2/access_token?appid=" + MainActivity.APP_ID + "&secret=" + MainActivity.APP_SECRECT + "&code=" + code + "&grant_type=authorization_code";
                     new GetAccessTokenTask().execute(url);
